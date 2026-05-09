@@ -21,8 +21,8 @@ export const SimulationResponseSchema = z.object({
   nodes: z.array(NodeSchema).min(6, "Minimum 6 nodes required"),
   edges: z.array(EdgeSchema).min(5, "Minimum 5 edges required"),
   timeline: TimelineSchema,
-  sector_impacts: z.array(SectorImpactSchema).min(4, "Minimum 4 sectors required"),
-  debate_participants: z.array(ParticipantSchema).min(3, "Minimum 3 debate participants required"),
+  sector_impacts: z.array(SectorImpactSchema).default([]),
+  debate_participants: z.array(ParticipantSchema).default([]),
   metadata: z.object({
     scenario: z.string(),
     duration_focus: z.string(),

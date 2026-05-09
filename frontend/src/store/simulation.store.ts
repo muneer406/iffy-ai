@@ -7,12 +7,15 @@ interface SimulationStore {
   simulation: SimulationResponse | null;
   nodes: SimulationNode[];
   edges: SimulationEdge[];
+  debateMessages: any[];
   selectedDuration: "immediate" | "short_term" | "long_term";
   isLoading: boolean;
   error: string | null;
 
   setSimulation: (sim: SimulationResponse) => void;
   applyMutation: (mutation: MutationResponse) => void;
+  addSectorImpact: (impact: SectorImpact) => void;
+  updateDebate: (participants: any[], messages: any[]) => void;
   setDuration: (d: "immediate" | "short_term" | "long_term") => void;
   setLoading: (loading: boolean) => void;
   setError: (err: string | null) => void;
@@ -24,7 +27,8 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
   simulation: null,
   nodes: [],
   edges: [],
-  selectedDuration: "long_term",
+  debateMessages: [],
+  selectedDuration: "immediate",
   isLoading: false,
   error: null,
 
@@ -52,6 +56,30 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
         : null,
     })),
 
+  addSectorImpact: (impact) =>
+    set((state) => {
+      if (!state.simulation) return {};
+      const existing = state.simulation.sector_impacts?.filter(s => s.sector !== impact.sector) || [];
+      return {
+        simulation: {
+          ...state.simulation,
+          sector_impacts: [...existing, impact],
+        }
+      };
+    }),
+
+  updateDebate: (participants, messages) =>
+    set((state) => {
+      if (!state.simulation) return {};
+      return {
+        debateMessages: messages,
+        simulation: {
+          ...state.simulation,
+          debate_participants: participants,
+        }
+      };
+    }),
+
   setDuration: (d) => set({ selectedDuration: d }),
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (err) => set({ error: err }),
@@ -61,6 +89,7 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
       simulation: null,
       nodes: [],
       edges: [],
+      debateMessages: [],
       isLoading: false,
       error: null,
     }),

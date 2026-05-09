@@ -131,10 +131,8 @@ export function FlowchartTab() {
         )}
       </div>
 
-      {/* Mutation input */}
-      <div className="p-4 border-t border-white/6 shrink-0">
-        <MutationInput onMutate={handleMutate} isLoading={isMutating} />
-      </div>
+      {/* Floating Mutation input */}
+      <MutationInput onMutate={handleMutate} isLoading={isMutating} />
     </motion.div>
   );
 }

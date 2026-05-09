@@ -101,7 +101,7 @@ export function DebateTab() {
   const [participants, setParticipants] = useState<Participant[]>(
     simulation?.debate_participants ?? []
   );
-  const [messages, setMessages] = useState<DebateMessage[]>([]);
+  const [messages, setMessages] = useState<DebateMessage[]>(useSimulationStore.getState().debateMessages || []);
   const [initialized, setInitialized] = useState(false);
   const [continuation, setContinuation] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -111,12 +111,27 @@ export function DebateTab() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isDebateLoading]);
 
-  // Initialize debate on first load
+  // Sync with store if background load finishes
   useEffect(() => {
-    if (!simulation || initialized) return;
+    if (simulation?.debate_participants?.length) {
+      setParticipants(simulation.debate_participants);
+    }
+  }, [simulation?.debate_participants]);
+
+  useEffect(() => {
+    const storeMessages = useSimulationStore.getState().debateMessages;
+    if (storeMessages?.length) {
+      setMessages(storeMessages);
+    }
+  }, [useSimulationStore.getState().debateMessages]);
+
+  // We don't need to generateDebate on load anymore if page.tsx handles it.
+  // But just in case, if not loading and empty:
+  useEffect(() => {
+    if (!simulation || initialized || isDebateLoading || messages.length > 0) return;
     generateDebate();
     setInitialized(true);
-  }, [simulation]);
+  }, [simulation, isDebateLoading, messages.length]);
 
   const participantMap = Object.fromEntries(participants.map((p) => [p.id, p]));
 

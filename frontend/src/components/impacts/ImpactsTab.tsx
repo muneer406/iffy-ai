@@ -14,19 +14,19 @@ import type { SectorImpact } from "@/types/simulation";
 
 // ─── Sector Selector ──────────────────────────────────────────────────────────
 function SectorSelector({ sectors, selected, onSelect }: {
-  sectors: SectorImpact[];
+  sectors: string[];
   selected: string | null;
   onSelect: (s: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-1.5 w-full md:w-52 shrink-0">
       <p className="text-xs text-slate-500 uppercase tracking-widest font-medium px-1 mb-1">Sectors</p>
-      {sectors.map((s) => {
-        const active = selected === s.sector;
+      {sectors.map((sector) => {
+        const active = selected === sector;
         return (
           <button
-            key={s.sector}
-            onClick={() => onSelect(s.sector)}
+            key={sector}
+            onClick={() => onSelect(sector)}
             className={cn(
               "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium",
               "border transition-all duration-200 text-left cursor-pointer",
@@ -35,7 +35,7 @@ function SectorSelector({ sectors, selected, onSelect }: {
                 : "bg-white/2 border-white/6 text-slate-400 hover:text-slate-200 hover:border-white/15"
             )}
           >
-            <span>{s.sector}</span>
+            <span>{sector}</span>
             <ChevronRight className={cn("w-4 h-4 transition-transform", active ? "rotate-90" : "")} />
           </button>
         );
@@ -165,28 +165,28 @@ function SectorDetail({ sector }: { sector: SectorImpact }) {
 
 // ─── Main ImpactsTab ──────────────────────────────────────────────────────────
 export function ImpactsTab() {
-  const { simulation } = useSimulationStore();
+  const { simulation, addSectorImpact } = useSimulationStore();
   const { selectedSector, setSector, isSectorLoading, setSectorLoading } = useUIStore();
-  const [sectors, setSectors] = useState<SectorImpact[]>(simulation?.sector_impacts ?? []);
-  const [activeSector, setActiveSector] = useState<SectorImpact | null>(
-    (simulation?.sector_impacts?.[0]) ?? null
-  );
+  
+  // Available sectors are the 'systems' from the simulation
+  const sectorNames = simulation?.systems ?? [];
+  const fetchedImpacts = simulation?.sector_impacts ?? [];
 
+  const activeSectorData = fetchedImpacts.find(s => s.sector === selectedSector) || null;
+
+  // Initialize selected sector
   useEffect(() => {
-    if (simulation?.sector_impacts?.length) {
-      setSectors(simulation.sector_impacts);
-      setActiveSector(simulation.sector_impacts[0]);
-      setSector(simulation.sector_impacts[0].sector);
+    if (!selectedSector && sectorNames.length > 0) {
+      setSector(sectorNames[0]);
     }
-  }, [simulation, setSector]);
+  }, [sectorNames, selectedSector, setSector]);
 
   const handleSelect = async (sectorName: string) => {
     setSector(sectorName);
-    const existing = sectors.find((s) => s.sector === sectorName);
+    const existing = fetchedImpacts.find((s) => s.sector === sectorName);
 
     if (existing) {
-      setActiveSector(existing);
-      return;
+      return; // Already fetched
     }
 
     // Fetch deep analysis
@@ -194,8 +194,7 @@ export function ImpactsTab() {
     setSectorLoading(true);
     try {
       const deep = await sectorAnalysis(simulation.simulation_id, sectorName);
-      setSectors((prev) => [...prev.filter((s) => s.sector !== sectorName), deep]);
-      setActiveSector(deep);
+      addSectorImpact(deep);
     } catch (e) {
       console.error("Sector fetch failed:", e);
     } finally {
@@ -212,7 +211,7 @@ export function ImpactsTab() {
       animate={{ opacity: 1 }}
     >
       <SectorSelector
-        sectors={sectors}
+        sectors={sectorNames}
         selected={selectedSector}
         onSelect={handleSelect}
       />
@@ -230,9 +229,20 @@ export function ImpactsTab() {
                 <span className="text-sm text-slate-500">Analyzing sector…</span>
               </div>
             </motion.div>
-          ) : activeSector ? (
-            <SectorDetail key={activeSector.sector} sector={activeSector} />
-          ) : null}
+          ) : activeSectorData ? (
+            <SectorDetail key={activeSectorData.sector} sector={activeSectorData} />
+          ) : (
+            <motion.div
+              key="loading-initial"
+              className="flex items-center justify-center h-64"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-7 h-7 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
+                <span className="text-sm text-slate-500">Generating impact data…</span>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </motion.div>

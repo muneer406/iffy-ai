@@ -11,7 +11,7 @@ interface NavbarProps {
 export function Navbar({ scenario }: NavbarProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/6 bg-[#09090f]/80 backdrop-blur-xl">
-      <div className="flex items-center justify-between px-6 h-14 max-w-screen-2xl mx-auto">
+      <div className="flex items-center justify-between px-6 h-14 w-full">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25">

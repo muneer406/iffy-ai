@@ -22,13 +22,18 @@ export default function LandingPage() {
   const { setSimulation, setLoading, reset } = useSimulationStore();
 
   const handleSubmit = async (scenario: string) => {
+    let finalScenario = scenario.trim();
+    if (!finalScenario.toLowerCase().startsWith("what if")) {
+      finalScenario = `What if ${finalScenario.charAt(0).toLowerCase()}${finalScenario.slice(1)}`;
+    }
+
     setIsLoading(true);
     setLoading(true);
     setError(null);
     reset();
 
     try {
-      const result = await simulate(scenario);
+      const result = await simulate(finalScenario);
       setSimulation(result);
       router.push(`/simulate/${result.simulation_id}`);
     } catch (err) {

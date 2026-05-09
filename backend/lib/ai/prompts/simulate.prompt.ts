@@ -57,39 +57,12 @@ The JSON must strictly follow this schema:
     ],
     "short_term": [...],
     "long_term": [...]
-  },
-  "sector_impacts": [
-    {
-      "sector": "Sector Name",
-      "overview": "High-level explanation",
-      "positive_effects": ["list of benefits"],
-      "negative_effects": ["list of downsides"],
-      "metrics": [
-        { "name": "Metric Name", "direction": "increase|decrease|stable", "magnitude": <0-100>, "confidence": <0-1> }
-      ],
-      "ripple_effects": ["secondary impacts"],
-      "confidence_score": <0.0 to 1.0>
-    }
-  ],
-  "debate_participants": [
-    {
-      "id": "participant_snake_id",
-      "name": "Human name",
-      "role": "Their profession/role",
-      "stance": "supportive|opposed|neutral|conflicted",
-      "biases": ["list of biases"],
-      "personality": "Brief personality description",
-      "concerns": ["list of concerns"],
-      "goals": ["list of goals"]
-    }
-  ]
+  }
 }
 
 ## Hard Requirements (you MUST meet all of these)
 - MINIMUM 6 nodes
 - MINIMUM 5 edges
-- MINIMUM 4 sector_impacts
-- MINIMUM 3 debate_participants
 - ALL three timeline horizons must have at least 2 events each
 - impact_score and duration values must be numbers (not strings)
 - confidence values must be decimals between 0 and 1
