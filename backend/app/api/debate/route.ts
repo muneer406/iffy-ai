@@ -21,7 +21,7 @@ import { logger } from "../../../lib/utils/logger";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { simulation_id, participants, existing_messages, continuation_prompt, scenario } = body;
+    const { simulation_id, participants, existing_messages, continuation_prompt, scenario, mode } = body;
 
     if (!simulation_id || typeof simulation_id !== "string") {
       return successResponse({ error: "simulation_id is required" }, 400);
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       existing_messages: existing_messages ?? [],
       continuation_prompt,
       scenario,
+      mode,
     });
 
     const response = successResponse(debate);

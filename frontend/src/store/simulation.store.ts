@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import type { SimulationResponse, SimulationNode, SimulationEdge, SectorImpact, MutationResponse } from "@/types/simulation";
+import { useHistoryStore } from "./history.store";
 
 interface SimulationStore {
   simulationId: string | null;
@@ -32,53 +33,64 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
   isLoading: false,
   error: null,
 
-  setSimulation: (sim) =>
+  setSimulation: (sim) => {
     set({
       simulationId: sim.simulation_id,
       simulation: sim,
       nodes: sim.nodes,
       edges: sim.edges,
       error: null,
-    }),
+    });
+    useHistoryStore.getState().addSimulation(sim);
+  },
 
-  applyMutation: (mutation) =>
-    set((state) => ({
-      nodes: mutation.updated_nodes,
-      edges: mutation.updated_edges,
-      simulation: state.simulation
-        ? {
-            ...state.simulation,
-            nodes: mutation.updated_nodes,
-            edges: mutation.updated_edges,
-            timeline: mutation.updated_timeline,
-            sector_impacts: mutation.updated_sector_impacts,
-          }
-        : null,
-    })),
+  applyMutation: (mutation) => {
+    set((state) => {
+      const newSim = state.simulation ? {
+        ...state.simulation,
+        nodes: mutation.updated_nodes,
+        edges: mutation.updated_edges,
+        timeline: mutation.updated_timeline,
+        sector_impacts: mutation.updated_sector_impacts,
+      } : null;
+      
+      if (newSim) useHistoryStore.getState().addSimulation(newSim);
 
-  addSectorImpact: (impact) =>
+      return {
+        nodes: mutation.updated_nodes,
+        edges: mutation.updated_edges,
+        simulation: newSim,
+      };
+    });
+  },
+
+  addSectorImpact: (impact) => {
     set((state) => {
       if (!state.simulation) return {};
       const existing = state.simulation.sector_impacts?.filter(s => s.sector !== impact.sector) || [];
-      return {
-        simulation: {
-          ...state.simulation,
-          sector_impacts: [...existing, impact],
-        }
+      const newSim = {
+        ...state.simulation,
+        sector_impacts: [...existing, impact],
       };
-    }),
+      useHistoryStore.getState().addSimulation(newSim);
+      return { simulation: newSim };
+    });
+  },
 
-  updateDebate: (participants, messages) =>
+  updateDebate: (participants, messages) => {
     set((state) => {
       if (!state.simulation) return {};
+      const newSim = {
+        ...state.simulation,
+        debate_participants: participants,
+      };
+      useHistoryStore.getState().addSimulation(newSim);
       return {
         debateMessages: messages,
-        simulation: {
-          ...state.simulation,
-          debate_participants: participants,
-        }
+        simulation: newSim
       };
-    }),
+    });
+  },
 
   setDuration: (d) => set({ selectedDuration: d }),
   setLoading: (loading) => set({ isLoading: loading }),

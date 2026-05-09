@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
@@ -19,8 +19,7 @@ function SectorSelector({ sectors, selected, onSelect }: {
   onSelect: (s: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 w-full md:w-52 shrink-0">
-      <p className="text-xs text-slate-500 uppercase tracking-widest font-medium px-1 mb-1">Sectors</p>
+    <div className="flex flex-row flex-wrap gap-2 w-full shrink-0 mb-4 pb-2 border-b border-white/6">
       {sectors.map((sector) => {
         const active = selected === sector;
         return (
@@ -28,15 +27,13 @@ function SectorSelector({ sectors, selected, onSelect }: {
             key={sector}
             onClick={() => onSelect(sector)}
             className={cn(
-              "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium",
-              "border transition-all duration-200 text-left cursor-pointer",
+              "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer border",
               active
-                ? "bg-blue-600/15 border-blue-500/40 text-blue-300"
-                : "bg-white/2 border-white/6 text-slate-400 hover:text-slate-200 hover:border-white/15"
+                ? "bg-blue-600/20 border-blue-500/50 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                : "bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10"
             )}
           >
-            <span>{sector}</span>
-            <ChevronRight className={cn("w-4 h-4 transition-transform", active ? "rotate-90" : "")} />
+            {sector}
           </button>
         );
       })}
@@ -63,101 +60,113 @@ function SectorDetail({ sector }: { sector: SectorImpact }) {
     confidence: Math.round(m.confidence * 100),
   }));
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 }
+    }
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
     <motion.div
       key={sector.sector}
       className="flex-1 space-y-4 min-w-0"
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
     >
       {/* Header */}
-      <div className="p-4 rounded-xl border border-white/8 bg-white/2">
-        <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "Space Grotesk" }}>
+      <motion.div variants={itemVariants} className="p-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-lg shadow-black/20">
+        <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Space Grotesk" }}>
           {sector.sector}
         </h3>
-        <p className="text-sm text-slate-400 leading-relaxed">{sector.overview}</p>
-        <div className="mt-3 flex items-center gap-2">
-          <div className="text-xs text-slate-500">Confidence:</div>
-          <div className="flex-1 h-1 rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-blue-500 transition-all duration-700"
-              style={{ width: `${sector.confidence_score * 100}%` }}
-            />
-          </div>
-          <div className="text-xs text-blue-400">{Math.round(sector.confidence_score * 100)}%</div>
-        </div>
-      </div>
+        <p className="text-sm md:text-base text-slate-300 leading-relaxed">{sector.overview}</p>
+      </motion.div>
 
       {/* Positives + Negatives */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
-          <div className="flex items-center gap-2 mb-2.5">
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-semibold text-emerald-400">Positive Effects</span>
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-lg shadow-black/10">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1.5 rounded-lg bg-emerald-500/20">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
+            </div>
+            <span className="text-base font-semibold text-emerald-400">Positive Effects</span>
           </div>
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {sector.positive_effects.map((e, i) => (
-              <li key={i} className="text-xs text-slate-300 flex items-start gap-1.5">
-                <span className="text-emerald-500 mt-0.5 shrink-0">+</span>{e}
+              <li key={i} className="text-sm text-slate-300 flex items-start gap-2 leading-relaxed">
+                <span className="text-emerald-500 mt-0.5 shrink-0 text-lg leading-none">+</span>
+                <span>{e}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5">
-          <div className="flex items-center gap-2 mb-2.5">
-            <TrendingDown className="w-4 h-4 text-red-400" />
-            <span className="text-sm font-semibold text-red-400">Negative Effects</span>
+        <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5 shadow-lg shadow-black/10">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1.5 rounded-lg bg-red-500/20">
+              <TrendingDown className="w-5 h-5 text-red-400" />
+            </div>
+            <span className="text-base font-semibold text-red-400">Negative Effects</span>
           </div>
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {sector.negative_effects.map((e, i) => (
-              <li key={i} className="text-xs text-slate-300 flex items-start gap-1.5">
-                <span className="text-red-500 mt-0.5 shrink-0">-</span>{e}
+              <li key={i} className="text-sm text-slate-300 flex items-start gap-2 leading-relaxed">
+                <span className="text-red-500 mt-0.5 shrink-0 text-lg leading-none">-</span>
+                <span>{e}</span>
               </li>
             ))}
           </ul>
         </div>
-      </div>
+      </motion.div>
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <div className="p-4 rounded-xl border border-white/8 bg-white/2">
-          <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-3">Impact Metrics</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+        <motion.div variants={itemVariants} className="p-5 rounded-2xl border border-white/10 bg-white/5 shadow-lg shadow-black/10">
+          <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-4">Impact Metrics</p>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 20, left: -20 }}>
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} dy={10} />
+              <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} dx={-10} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]}
-                fill="url(#barGrad)"
-              />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="url(#barGrad)">
+                {/* Recharts animation for the bar growing */}
+              </Bar>
               <defs>
                 <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.4} />
                 </linearGradient>
               </defs>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
       )}
 
       {/* Ripple Effects */}
       {sector.ripple_effects?.length > 0 && (
-        <div className="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5">
-          <div className="flex items-center gap-2 mb-2.5">
-            <Zap className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm font-semibold text-cyan-400">Ripple Effects</span>
+        <motion.div variants={itemVariants} className="p-5 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 shadow-lg shadow-black/10">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1.5 rounded-lg bg-cyan-500/20">
+              <Zap className="w-5 h-5 text-cyan-400" />
+            </div>
+            <span className="text-base font-semibold text-cyan-400">Ripple Effects</span>
           </div>
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {sector.ripple_effects.map((r, i) => (
-              <li key={i} className="text-xs text-slate-300 flex items-start gap-1.5">
-                <span className="text-cyan-500 mt-0.5 shrink-0">→</span>{r}
+              <li key={i} className="text-sm text-slate-300 flex items-start gap-2 leading-relaxed">
+                <span className="text-cyan-500 mt-0.5 shrink-0 text-lg leading-none">→</span>
+                <span>{r}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );
@@ -206,7 +215,7 @@ export function ImpactsTab() {
 
   return (
     <motion.div
-      className="flex flex-col md:flex-row gap-4 h-full p-4 overflow-auto"
+      className="flex flex-col h-full p-6 overflow-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >

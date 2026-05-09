@@ -63,7 +63,8 @@ export async function debate(
   participants: Participant[],
   existingMessages: DebateMessage[],
   scenario: string,
-  continuationPrompt?: string
+  continuationPrompt?: string,
+  mode?: "participants" | "messages" | "full"
 ): Promise<DebateResponse> {
   const res = await api.post("/api/debate", {
     simulation_id: simulationId,
@@ -71,6 +72,7 @@ export async function debate(
     existing_messages: existingMessages,
     scenario,
     continuation_prompt: continuationPrompt,
+    mode,
   });
   return unwrap(res);
 }

@@ -51,8 +51,8 @@ Output ONLY a valid JSON object:
 }
 
 ## Hard Requirements
-- MINIMUM 3 participants
-- MINIMUM 6 messages in a new debate (2 rounds per participant minimum)
+- MINIMUM 3 participants (if generating participants)
+- MINIMUM 4 messages (if generating messages)
 - Each participant must speak at least once
 - Messages must feel human, not corporate
 - Output ONLY JSON. No markdown. No explanations.
@@ -62,20 +62,31 @@ export function buildDebateUserPrompt(
   scenario: string,
   participants: unknown[],
   existingMessages: unknown[],
-  continuationPrompt?: string
+  continuationPrompt?: string,
+  mode: "participants" | "messages" | "full" = "full"
 ): string {
-  const isNewDebate = existingMessages.length === 0;
+  if (mode === "participants") {
+    return `
+Scenario: "${scenario}"
 
-  if (isNewDebate) {
+Generate initial debate participants (stakeholders, experts, everyday people) about this scenario.
+Create diverse perspectives that will lead to genuine disagreement.
+DO NOT generate any messages.
+Output ONLY a JSON object with the key "participants" containing the array of participants. No markdown.
+`.trim();
+  }
+
+  if (mode === "full") {
     return `
 Scenario: "${scenario}"
 
 Generate initial debate participants and their opening messages about this scenario.
 Create diverse perspectives that will lead to genuine disagreement.
-Output ONLY the JSON object. No markdown.
+Output ONLY the JSON object with both "participants" and "messages". No markdown.
 `.trim();
   }
 
+  // mode === "messages"
   return `
 Scenario: "${scenario}"
 
@@ -86,8 +97,9 @@ Previous messages (most recent last):
 ${JSON.stringify(existingMessages.slice(-10), null, 2)}
 ${continuationPrompt ? `\nUser wants to explore: "${continuationPrompt}"` : ""}
 
-Generate 4-6 more messages continuing this debate naturally.
+Generate 4-6 new messages continuing this debate naturally.
 Output ONLY a JSON object with the key "messages" containing the new messages array.
 Each message must react to what came before. Maintain each character's established stance and personality.
+If the User said something, have the characters naturally react to the User's input.
 `.trim();
 }

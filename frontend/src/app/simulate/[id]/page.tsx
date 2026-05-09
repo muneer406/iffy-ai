@@ -66,7 +66,7 @@ function TabContent() {
 export default function SimulatePage() {
   const params = useParams();
   const { simulation, isLoading, updateDebate, addSectorImpact } = useSimulationStore();
-  const { setTab, setDebateLoading, setSectorLoading } = useUIStore();
+  const { activeTab, setTab, setDebateLoading, setSectorLoading } = useUIStore();
 
   const scenario = simulation?.metadata?.scenario ?? simulation?.title;
 
@@ -75,10 +75,9 @@ export default function SimulatePage() {
     if (!simulation) return;
     setTab("flowchart");
 
-    // Progressive loading: Debate
     if (!simulation.debate_participants || simulation.debate_participants.length === 0) {
       setDebateLoading(true);
-      debate(simulation.simulation_id, [], [], scenario ?? "")
+      debate(simulation.simulation_id, [], [], scenario ?? "", undefined, "participants")
         .then((res) => updateDebate(res.participants, res.messages))
         .catch(console.error)
         .finally(() => setDebateLoading(false));
@@ -105,23 +104,32 @@ export default function SimulatePage() {
       {/* Floating Sidebar */}
       <TabNav />
 
-      {/* Header */}
-      <div className="pt-20 pb-6 px-16 shrink-0 relative z-10 flex flex-col items-center text-center">
-        {/* Glow effect */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[100px] bg-blue-500/10 blur-[60px] pointer-events-none rounded-full" />
-        
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl">
-          <h1
-            className="text-3xl md:text-4xl font-bold text-white mb-3"
-            style={{ fontFamily: "Space Grotesk" }}
+      {/* Header - Only visible on Flowchart tab */}
+      <AnimatePresence>
+        {activeTab === "flowchart" && (
+          <motion.div 
+            className="pt-20 pb-6 px-16 shrink-0 relative z-10 flex flex-col items-center text-center"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0, overflow: "hidden" }}
           >
-            {simulation.title}
-          </h1>
-          <p className="text-sm md:text-base text-slate-400 leading-relaxed max-w-3xl mx-auto">
-            {simulation.summary}
-          </p>
-        </motion.div>
-      </div>
+            {/* Glow effect */}
+            <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[100px] bg-blue-500/10 blur-[60px] pointer-events-none rounded-full" />
+            
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl">
+              <h1
+                className="text-3xl md:text-4xl font-bold text-white mb-3"
+                style={{ fontFamily: "Space Grotesk" }}
+              >
+                {simulation.title}
+              </h1>
+              <p className="text-sm md:text-base text-slate-400 leading-relaxed max-w-3xl mx-auto">
+                {simulation.summary}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Tab content area */}
       <div className="flex-1 overflow-hidden relative z-0">

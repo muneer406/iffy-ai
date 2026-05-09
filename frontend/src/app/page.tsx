@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ParticleBackground } from "@/components/landing/ParticleBackground";
@@ -7,12 +7,61 @@ import { HeroInput } from "@/components/landing/HeroInput";
 import { SuggestionRows } from "@/components/landing/SuggestionRows";
 import { simulate } from "@/lib/api/client";
 import { useSimulationStore } from "@/store/simulation.store";
+import { useHistoryStore } from "@/store/history.store";
+import { Clock, ArrowRight } from "lucide-react";
 
 const STATS = [
   { value: "∞", label: "Possible scenarios" },
   { value: "4", label: "Analysis dimensions" },
   { value: "AI", label: "Powered reasoning" },
 ];
+
+function HistorySection() {
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const { history } = useHistoryStore();
+  const { setSimulation } = useSimulationStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || history.length === 0) return null;
+
+  return (
+    <motion.div
+      className="w-full max-w-5xl mt-10"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <div className="flex items-center gap-2 mb-3 justify-center">
+        <Clock className="w-4 h-4 text-slate-500" />
+        <span className="text-xs text-slate-500 uppercase tracking-widest font-medium">Recent Simulations</span>
+      </div>
+      
+      <div className="flex gap-3 overflow-x-auto pb-4 justify-center flex-wrap max-w-full">
+        {history.slice(0, 3).map((item) => (
+          <button
+            key={item.simulation_id}
+            onClick={() => {
+              setSimulation(item.data);
+              router.push(`/simulate/${item.simulation_id}`);
+            }}
+            className="flex flex-col items-start gap-1 p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer w-[280px] shrink-0 text-left"
+          >
+            <div className="text-sm font-semibold text-white truncate w-full" style={{ fontFamily: "Space Grotesk" }}>
+              {item.title}
+            </div>
+            <div className="text-xs text-slate-400 truncate w-full">
+              {item.scenario}
+            </div>
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function LandingPage() {
   const router = useRouter();
@@ -102,6 +151,9 @@ export default function LandingPage() {
             {error}
           </motion.p>
         )}
+
+        {/* History */}
+        <HistorySection />
 
         {/* Stats */}
         <motion.div

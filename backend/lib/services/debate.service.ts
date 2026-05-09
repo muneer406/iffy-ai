@@ -16,12 +16,17 @@ const ContinuationResponseSchema = z.object({
   messages: z.array(DebateMessageSchema).min(1),
 });
 
+const ParticipantsResponseSchema = z.object({
+  participants: z.array(z.any()).min(1), // Using any here to bypass strict validation in the initial step if needed, or import ParticipantSchema. Wait, ParticipantSchema is in debate.schema
+});
+
 export interface DebateRequest {
   simulation_id: string;
   participants: Participant[];
   existing_messages: DebateMessage[];
   continuation_prompt?: string;
   scenario?: string;
+  mode?: "participants" | "messages" | "full";
 }
 
 export interface DebateResponse {
@@ -45,13 +50,14 @@ export async function runDebate(req: DebateRequest): Promise<DebateResponse> {
     scenario = "this scenario",
   } = req;
 
-  const isNewDebate = existing_messages.length === 0 && participants.length === 0;
+  const mode = req.mode ?? (existing_messages.length === 0 && participants.length === 0 ? "full" : "messages");
   const systemPrompt = DEBATE_SYSTEM_PROMPT;
   const userPrompt = buildDebateUserPrompt(
     scenario,
     participants,
     existing_messages,
-    continuation_prompt
+    continuation_prompt,
+    mode
   );
 
   const rawData = await generateFromAI({
@@ -59,12 +65,35 @@ export async function runDebate(req: DebateRequest): Promise<DebateResponse> {
     userPrompt,
     endpoint: "debate",
     temperature: 0.85, // Higher temp for personality variety
-    maxTokens: 4096,
+    maxTokens: mode === "participants" ? 1024 : 4096,
   });
 
   let result: DebateResponse;
 
-  if (isNewDebate) {
+  if (mode === "participants") {
+    let partData;
+    try {
+      partData = validateOutput(ParticipantsResponseSchema, rawData, "debate:participants", 1);
+    } catch (err) {
+      if (err instanceof AppError && err.type === "validation_error") {
+        partData = await repairOutput({
+          schema: ParticipantsResponseSchema,
+          systemPrompt,
+          userPrompt,
+          endpoint: "debate:participants",
+          badData: rawData,
+          issues: (err.details as string[]) ?? [],
+        });
+      } else {
+        throw err;
+      }
+    }
+    result = {
+      debate_id: uuidv4(),
+      participants: partData.participants,
+      messages: [],
+    };
+  } else if (mode === "full") {
     // Full debate generation — validate against full DebateSchema
     let debate;
     try {
@@ -89,7 +118,7 @@ export async function runDebate(req: DebateRequest): Promise<DebateResponse> {
       messages: debate.messages,
     };
   } else {
-    // Continuation — only validate the new messages
+    // Continuation or messages-only — only validate the new messages
     let continuation;
     try {
       continuation = validateOutput(ContinuationResponseSchema, rawData, "debate:continue", 1);
