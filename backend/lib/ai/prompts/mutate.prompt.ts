@@ -22,6 +22,8 @@ Output ONLY a valid JSON object with EXACTLY this structure:
 
 {
   "divergence_nodes": ["list of existing node IDs most directly affected by the mutation"],
+  "updated_title": "A catchy new title reflecting the mutated scenario",
+  "updated_summary": "A short summary of how the mutation changes the overall outcome",
   "new_nodes": [
     {
       "id": "snake_case_unique_id",

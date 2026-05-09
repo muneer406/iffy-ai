@@ -48,6 +48,8 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     set((state) => {
       const newSim = state.simulation ? {
         ...state.simulation,
+        title: mutation.updated_title || state.simulation.title,
+        summary: mutation.updated_summary || state.simulation.summary,
         nodes: mutation.updated_nodes,
         edges: mutation.updated_edges,
         timeline: mutation.updated_timeline,

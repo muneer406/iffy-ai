@@ -101,6 +101,9 @@ export default function SimulatePage() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#09090f]">
       <Navbar scenario={scenario} />
       
+      {/* Spacer for fixed navbar */}
+      <div className="h-14 shrink-0" />
+      
       {/* Floating Sidebar */}
       <TabNav />
 

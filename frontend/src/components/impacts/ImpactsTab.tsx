@@ -55,7 +55,7 @@ function CustomTooltip({ active, payload, label }: {active?: boolean; payload?: 
 // ─── Sector Detail ────────────────────────────────────────────────────────────
 function SectorDetail({ sector }: { sector: SectorImpact }) {
   const chartData = sector.metrics.map((m) => ({
-    name: m.name.length > 16 ? m.name.slice(0, 14) + "…" : m.name,
+    name: m.name,
     value: m.direction === "decrease" ? -m.magnitude : m.magnitude,
     confidence: Math.round(m.confidence * 100),
   }));
@@ -131,8 +131,8 @@ function SectorDetail({ sector }: { sector: SectorImpact }) {
         <motion.div variants={itemVariants} className="p-5 rounded-2xl border border-white/10 bg-white/5 shadow-lg shadow-black/10">
           <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-4">Impact Metrics</p>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 20, left: -20 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} dy={10} />
+            <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 60, left: -20 }}>
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} angle={-45} textAnchor="end" axisLine={false} tickLine={false} dy={10} />
               <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} dx={-10} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
               <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="url(#barGrad)">

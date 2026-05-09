@@ -103,6 +103,8 @@ export interface SimulationResponse {
 export interface MutationResponse {
   mutation_id: string;
   divergence_nodes: string[];
+  updated_title: string;
+  updated_summary: string;
   updated_nodes: SimulationNode[];
   updated_edges: SimulationEdge[];
   updated_timeline: Timeline;
